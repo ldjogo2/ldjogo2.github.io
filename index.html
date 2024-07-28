@@ -120,15 +120,14 @@
       updateChart();
 
       showSlide(currentSlide);
-    });
 
-    // TODO, change this to auto navigate through slides
-    // Add navigation buttons or listeners to navigate slides
-    d3.select('body').on('keydown', (event) => {
-      if (currentSlide < slides.size() - 1) {
-        currentSlide++;
-        showSlide(currentSlide);
-      }
+      // Automatically navigate through slides every 7 seconds
+      setInterval(() => {
+            if (currentSlide !== 3) {
+                currentSlide = (currentSlide + 1) % slides.size();
+                showSlide(currentSlide);
+            }
+      }, 7000); // 7000 milliseconds = 7 seconds
     });
   </script>
 </body>
