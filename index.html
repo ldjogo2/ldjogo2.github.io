@@ -1,1 +1,125 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Students Performance Visualization</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <style>
+    .slide { display: none; }
+    .active { display: block; }
+  </style>
+</head>
+<body>
+  <div id="slide1" class="slide active">
+    <h2>Ethnicity: Caucasian</h2>
+    <svg width="600" height="400"></svg>
+  </div>
+  <div id="slide2" class="slide">
+    <h2>Ethnicity: African American</h2>
+    <svg width="600" height="400"></svg>
+  </div>
+  <div id="slide3" class="slide">
+    <h2>Ethnicity: Asian</h2>
+    <svg width="600" height="400"></svg>
+  </div>
+  <div id="slide4" class="slide">
+    <h2>Interactive Filter</h2>
+    <div>
+      <label><input type="checkbox" value="0" checked> Caucasian</label>
+      <label><input type="checkbox" value="1" checked> African American</label>
+      <label><input type="checkbox" value="2" checked> Asian</label>
+      <label><input type="checkbox" value="3" checked> Other</label>
+    </div>
+    <svg width="600" height="400"></svg>
+  </div>
+
+  <script>
+    // JavaScript to navigate between slides
+    let currentSlide = 0;
+    const slides = d3.selectAll('.slide');
+
+    function showSlide(index) {
+      slides.classed('active', false);
+      d3.select(slides.nodes()[index]).classed('active', true);
+    }
+
+    // Load the data
+    d3.csv('/student_performance_data.csv').then(data => {
+      const width = 600;
+      const height = 400;
+      const margin = {top: 20, right: 30, bottom: 40, left: 40};
+
+      // Function to create bar chart
+      function createBarChart(svg, data) {
+        const x = d3.scaleBand()
+          .domain(data.map(d => d.GradeClass))
+          .range([margin.left, width - margin.right])
+          .padding(0.1);
+
+        const y = d3.scaleLinear()
+          .domain([0, d3.max(data, d => d.count)]).nice()
+          .range([height - margin.bottom, margin.top]);
+
+        svg.append("g")
+          .attr("transform", `translate(0,${height - margin.bottom})`)
+          .call(d3.axisBottom(x).tickFormat(d => ['A', 'B', 'C', 'D', 'F'][d]));
+
+        svg.append("g")
+          .attr("transform", `translate(${margin.left},0)`)
+          .call(d3.axisLeft(y));
+
+        svg.append("g")
+          .selectAll("rect")
+          .data(data)
+          .enter().append("rect")
+          .attr("x", d => x(d.GradeClass))
+          .attr("y", d => y(d.count))
+          .attr("height", d => y(0) - y(d.count))
+          .attr("width", x.bandwidth())
+          .attr("fill", "steelblue");
+      }
+
+      // Data preprocessing
+      const preprocess = (ethnicity) => {
+        return d3.nest()
+          .key(d => d.GradeClass)
+          .rollup(v => v.length)
+          .entries(data.filter(d => d.Ethnicity == ethnicity))
+          .map(d => ({GradeClass: d.key, count: d.value}));
+      };
+
+      // Create bar charts for each ethnicity
+      createBarChart(d3.select("#slide1 svg"), preprocess(0));
+      createBarChart(d3.select("#slide2 svg"), preprocess(1));
+      createBarChart(d3.select("#slide3 svg"), preprocess(2));
+
+      // Interactive slide
+      const updateChart = () => {
+        const selectedEthnicities = d3.selectAll('input:checked').nodes().map(n => +n.value);
+        const filteredData = data.filter(d => selectedEthnicities.includes(+d.Ethnicity));
+        const chartData = d3.nest()
+          .key(d => d.GradeClass)
+          .rollup(v => v.length)
+          .entries(filteredData)
+          .map(d => ({GradeClass: d.key, count: d.value}));
+
+        const svg = d3.select("#slide4 svg").selectAll("*").remove().node();
+        createBarChart(d3.select("#slide4 svg"), chartData);
+      };
+
+      d3.selectAll('input').on('change', updateChart);
+      updateChart();
+
+      showSlide(currentSlide);
+    });
+
+    // Add navigation buttons or listeners to navigate slides
+    d3.select('body').on('keydown', (event) => {
+      if (currentSlide < slides.size() - 1) {
+        currentSlide++;
+        showSlide(currentSlide);
+      }
+    });
+  </script>
+</body>
+</html>
