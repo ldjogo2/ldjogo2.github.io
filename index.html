@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Students Performance Visualization</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
   <style>
     .slide { display: none; }
     .active { display: block; }
@@ -86,6 +87,15 @@
           .attr("height", d => y(0) - y(d.count))
           .attr("width", x.bandwidth())
           .attr("fill", "steelblue");
+
+        // // Add annotations
+        // const makeAnnotations = d3.annotation()
+        //   .type(d3.annotationLabel)
+        //   .annotations(annotations);
+
+        // svg.append("g")
+        //   .attr("class", "annotation-group")
+        //   .call(makeAnnotations);
       }
 
       // Data preprocessing
@@ -96,6 +106,22 @@
           .entries(data.filter(d => d.Ethnicity == ethnicity))
           .map(d => ({GradeClass: parseFloat(d.key), count: d.value}));
       };
+
+      // Annotations for each slide
+      const annotations = [
+        {
+          note: { label: "Highest GPA", title: "Grade A" },
+          data: { GradeClass: 0.0 },
+          dy: 40,
+          dx: 560,
+        },
+        {
+          note: { label: "Lowest GPA", title: "Grade F" },
+          data: { GradeClass: 4.0 },
+          dy: 230,
+          dx: 660,
+        }
+      ];
 
       // Create bar charts for each ethnicity
       createBarChart(d3.select("#slide1 svg"), preprocess(0));
