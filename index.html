@@ -8,153 +8,193 @@
   <style>
     .slide { display: none; }
     .active { display: block; }
+    .chart-container {
+      margin-bottom: 50px;
+    }
   </style>
 </head>
 <body>
     <div id="slide1" class="slide active">
         <h2>Ethnicity: Caucasian</h2>
         <svg width="1000" height="600"></svg>
-        </div>
-        <div id="slide2" class="slide">
+    </div>
+    <div id="slide2" class="slide">
         <h2>Ethnicity: African American</h2>
         <svg width="1000" height="600"></svg>
-        </div>
-        <div id="slide3" class="slide">
+    </div>
+    <div id="slide3" class="slide">
         <h2>Ethnicity: Asian</h2>
         <svg width="1000" height="600"></svg>
+    </div>
+    <div id="slide4" class="slide">
+        <h2>Comprehensive Analysis</h2>
+        <div class="chart-container" id="gender-chart">
+            <h3>Gender</h3>
+            <div>
+                <label><input type="checkbox" value="0" checked> Male</label>
+                <label><input type="checkbox" value="1" checked> Female</label>
+            </div>
+            <svg width="1000" height="600"></svg>
         </div>
-        <div id="slide4" class="slide">
-        <h2>Interactive Filter</h2>
-        <div>
-            <label><input type="checkbox" value="0" checked> Caucasian</label>
-            <label><input type="checkbox" value="1" checked> African American</label>
-            <label><input type="checkbox" value="2" checked> Asian</label>
-            <label><input type="checkbox" value="3" checked> Other</label>
+        <div class="chart-container" id="ethnicity-chart">
+            <h3>Ethnicity</h3>
+            <div>
+                <label><input type="checkbox" value="0" checked> Caucasian</label>
+                <label><input type="checkbox" value="1" checked> African American</label>
+                <label><input type="checkbox" value="2" checked> Asian</label>
+                <label><input type="checkbox" value="3" checked> Other</label>
+            </div>
+            <svg width="1000" height="600"></svg>
         </div>
-        <svg width="1000" height="600"></svg>
-  </div>
+        <div class="chart-container" id="parental-education-chart">
+            <h3>Parental Education</h3>
+            <svg width="1000" height="600"></svg>
+        </div>
+        <div class="chart-container" id="study-time-weekly-chart">
+            <h3>Study Time Weekly</h3>
+            <svg width="1000" height="600"></svg>
+        </div>
+        <div class="chart-container" id="absences-chart">
+            <h3>Absences</h3>
+            <svg width="1000" height="600"></svg>
+        </div>
+        <div class="chart-container" id="tutoring-chart">
+            <h3>Tutoring</h3>
+            <svg width="1000" height="600"></svg>
+        </div>
+        <div class="chart-container" id="extracurricular-chart">
+            <h3>Extracurricular</h3>
+            <svg width="1000" height="600"></svg>
+        </div>
+    </div>
 
-  <script>
-    // JavaScript to navigate between slides
-    let currentSlide = 0;
-    const slides = d3.selectAll('.slide');
+    <script>
+        // JavaScript to navigate between slides
+        let currentSlide = 0;
+        const slides = d3.selectAll('.slide');
 
-    function showSlide(index) {
-      slides.classed('active', false);
-      d3.select(slides.nodes()[index]).classed('active', true);
-    }
-
-    // Load the data
-    d3.csv('/student_performance_data.csv').then(data => {
-      const width = 1000;
-      const height = 600;
-      const margin = {top: 50, right: 50, bottom: 50, left: 70};
-
-      // Custom labels for x-axis ticks
-      const customLabels = {0.0: '(GPA >= 3.5)', 1.0: '(3.0 <= GPA < 3.5)', 2.0: '(2.5 <= GPA < 3.0)', 3.0: '(2.0 <= GPA < 2.5)', 4.0: '(GPA < 2.0)'};
-
-      // Function to create bar chart
-      function createBarChart(svg, data) {
-        data.sort((a, b) => b.GradeClass - a.GradeClass);
-
-        const x = d3.scaleBand()
-          .domain(data.map(d => d.GradeClass))
-          .range([margin.left, width - margin.right])
-          .padding(0.1);
-
-        const y = d3.scaleLinear()
-          .domain([0, d3.max(data, d => d.count)]).nice()
-          .range([height - margin.bottom, margin.top]);
-
-        svg.append("g")
-          .attr("transform", `translate(0,${height - margin.bottom})`)
-          .call(d3.axisBottom(x).tickFormat(d => customLabels[d]))
-          .selectAll("text")
-          .style("font-size", "14px");  // Increase font size
-
-        svg.append("g")
-          .attr("transform", `translate(${margin.left},0)`)
-          .call(d3.axisLeft(y))
-          .selectAll("text")
-          .style("font-size", "12px");  // Increase font size
-
-        svg.append("g")
-          .selectAll("rect")
-          .data(data)
-          .enter().append("rect")
-          .attr("x", d => x(d.GradeClass))
-          .attr("y", d => y(d.count))
-          .attr("height", d => y(0) - y(d.count))
-          .attr("width", x.bandwidth())
-          .attr("fill", "steelblue");
-
-        // // Add annotations
-        // const makeAnnotations = d3.annotation()
-        //   .type(d3.annotationLabel)
-        //   .annotations(annotations);
-
-        // svg.append("g")
-        //   .attr("class", "annotation-group")
-        //   .call(makeAnnotations);
-      }
-
-      // Data preprocessing
-      const preprocess = (ethnicity) => {
-        return d3.nest()
-          .key(d => d.GradeClass)
-          .rollup(v => v.length)
-          .entries(data.filter(d => d.Ethnicity == ethnicity))
-          .map(d => ({GradeClass: parseFloat(d.key), count: d.value}));
-      };
-
-      // Annotations for each slide
-      const annotations = [
-        {
-          note: { label: "Highest GPA", title: "Grade A" },
-          data: { GradeClass: 0.0 },
-          dy: 40,
-          dx: 560,
-        },
-        {
-          note: { label: "Lowest GPA", title: "Grade F" },
-          data: { GradeClass: 4.0 },
-          dy: 230,
-          dx: 660,
+        function showSlide(index) {
+            slides.classed('active', false);
+            d3.select(slides.nodes()[index]).classed('active', true);
         }
-      ];
 
-      // Create bar charts for each ethnicity
-      createBarChart(d3.select("#slide1 svg"), preprocess(0));
-      createBarChart(d3.select("#slide2 svg"), preprocess(1));
-      createBarChart(d3.select("#slide3 svg"), preprocess(2));
+        // Load the data
+        d3.csv('/student_performance_data.csv').then(data => {
+            const width = 1000;
+            const height = 600;
+            const margin = {top: 50, right: 50, bottom: 50, left: 70};
 
-      // Interactive slide
-      const updateChart = () => {
-        const selectedEthnicities = d3.selectAll('input:checked').nodes().map(n => +n.value);
-        const filteredData = data.filter(d => selectedEthnicities.includes(+d.Ethnicity));
-        const chartData = d3.nest()
-          .key(d => d.GradeClass)
-          .rollup(v => v.length)
-          .entries(filteredData)
-          .map(d => ({GradeClass: parseFloat(d.key), count: d.value}));
+            // Custom labels for x-axis ticks
+            const customLabels = {0.0: '(GPA >= 3.5)', 1.0: '(3.0 <= GPA < 3.5)', 2.0: '(2.5 <= GPA < 3.0)', 3.0: '(2.0 <= GPA < 2.5)', 4.0: '(GPA < 2.0)'};
 
-        const svg = d3.select("#slide4 svg").selectAll("*").remove().node();
-        createBarChart(d3.select("#slide4 svg"), chartData);
-      };
+            // Function to create bar chart
+            function createBarChart(svg, data) {
+                data.sort((a, b) => b.GradeClass - a.GradeClass);
 
-      d3.selectAll('input').on('change', updateChart);
-      updateChart();
+                const x = d3.scaleBand()
+                    .domain(data.map(d => d.GradeClass))
+                    .range([margin.left, width - margin.right])
+                    .padding(0.1);
 
-      showSlide(currentSlide);
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.count)]).nice()
+                    .range([height - margin.bottom, margin.top]);
 
-      // Automatically navigate through slides every 7 seconds
-      setInterval(() => {
-            if (currentSlide !== 3) {
-                currentSlide = (currentSlide + 1) % slides.size();
-                showSlide(currentSlide);
+                svg.append("g")
+                    .attr("transform", `translate(0,${height - margin.bottom})`)
+                    .call(d3.axisBottom(x).tickFormat(d => customLabels[d]))
+                    .selectAll("text")
+                    .style("font-size", "14px");
+
+                svg.append("g")
+                    .attr("transform", `translate(${margin.left},0)`)
+                    .call(d3.axisLeft(y))
+                    .selectAll("text")
+                    .style("font-size", "12px");
+
+                svg.append("g")
+                    .selectAll("rect")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("x", d => x(d.GradeClass))
+                    .attr("y", d => y(d.count))
+                    .attr("height", d => y(0) - y(d.count))
+                    .attr("width", x.bandwidth())
+                    .attr("fill", "steelblue");
+
+                // // Add annotations
+                // const makeAnnotations = d3.annotation()
+                //     .type(d3.annotationLabel)
+                //     .accessors({
+                //         x: d => x(d.GradeClass) + x.bandwidth() / 2,
+                //         y: d => y(d.count)
+                //     })
+                //     .accessorsInverse({
+                //         GradeClass: d => x.invert(d.x - x.bandwidth() / 2),
+                //         count: d => y.invert(d.y)
+                //     })
+                //     .annotations(annotations);
+
+                // svg.append("g")
+                //     .attr("class", "annotation-group")
+                //     .call(makeAnnotations);
             }
-      }, 7000); // 7000 milliseconds = 7 seconds
-    });
-  </script>
+
+            // Data preprocessing
+            const preprocess = (ethnicity) => {
+                return d3.nest()
+                    .key(d => d.GradeClass)
+                    .rollup(v => v.length)
+                    .entries(data.filter(d => d.Ethnicity == ethnicity))
+                    .map(d => ({GradeClass: parseFloat(d.key), count: d.value}));
+            };
+
+
+            // Create bar charts for each ethnicity
+            createBarChart(d3.select("#slide1 svg"), preprocess(0));
+            createBarChart(d3.select("#slide2 svg"), preprocess(1));
+            createBarChart(d3.select("#slide3 svg"), preprocess(2));
+
+            // Function to update all charts in the comprehensive analysis
+            const updateComprehensiveCharts = () => {
+                const genderData = preprocess('Gender', d3.selectAll('#gender-chart input:checked').nodes().map(n => n.value));
+                const ethnicityData = preprocess('Ethnicity', d3.selectAll('#ethnicity-chart input:checked').nodes().map(n => n.value));
+                const parentalEducationData = preprocess('ParentalEducation');
+                const studyTimeWeeklyData = preprocess('StudyTimeWeekly');
+                const absencesData = preprocess('Absences');
+                const tutoringData = preprocess('Tutoring', d3.selectAll('#tutoring-chart input:checked').nodes().map(n => n.value));
+                const extracurricularData = preprocess('Extracurricular', d3.selectAll('#extracurricular-chart input:checked').nodes().map(n => n.value));
+
+                const chartConfigs = [
+                    {selector: '#gender-chart svg', data: genderData},
+                    {selector: '#ethnicity-chart svg', data: ethnicityData},
+                    {selector: '#parental-education-chart svg', data: parentalEducationData},
+                    {selector: '#study-time-weekly-chart svg', data: studyTimeWeeklyData},
+                    {selector: '#absences-chart svg', data: absencesData},
+                    {selector: '#tutoring-chart svg', data: tutoringData},
+                    {selector: '#extracurricular-chart svg', data: extracurricularData},
+                ];
+
+                chartConfigs.forEach(config => {
+                    d3.select(config.selector).selectAll("*").remove();
+                    createBarChart(d3.select(config.selector), config.data, []);
+                });
+            };
+
+            d3.selectAll('input').on('change', updateComprehensiveCharts);
+            updateComprehensiveCharts();
+
+            showSlide(currentSlide);
+
+            // Automatically navigate through slides every 7 seconds
+            setInterval(() => {
+                if (currentSlide < 3) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                }
+            }, 7000); // 7000 milliseconds = 7 seconds
+        });
+
+    </script>
 </body>
 </html>
